@@ -1,0 +1,17 @@
+{
+  "name": "tiled-poly",
+  "version": "1.0.0",
+  "main": "poly.global.js",
+  "scripts": {
+    "build": "tsup"
+  },
+  "keywords": ["tiled", "map-editor"],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "@mapeditor/tiled-api": "^1.10.1",
+    "tsup": "^8.1.0",
+    "typescript": "^5.4.5"
+  }
+}
