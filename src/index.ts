@@ -12,15 +12,30 @@ const action = tiled.registerAction("IslandShores", function() {
         return;
     }
 
-    const islands = getIslandShores(layer as TileLayer)
+    if (map.orientation == TileMap.Staggered || map.orientation == TileMap.Hexagonal || map.infinite) {
+        tiled.alert("Warning!", "Staggered, hexagonal and infinite maps are not currently supported")
+        return
+    }
 
-    const newObjectLayer = new ObjectGroup()
-    newObjectLayer.name = "Island Shores"
+    try {
+        const islands = getIslandShores(layer as TileLayer, map)
 
-    for (let island of islands) {
-        const newMapObject = new MapObject()
-        newMapObject.polygon = island.poligon
-        newObjectLayer.addObject(newMapObject)
+        const newObjectLayer = new ObjectGroup()
+        newObjectLayer.name = `Island Shores (${layer.name})`
+
+        for (let island of islands) {
+            const newMapObject = new MapObject()
+            newMapObject.polygon = island
+            newMapObject.shape = MapObject.Polygon
+            newMapObject.pos.x = map.orientation == TileMap.Isometric ? -map.tileWidth / 2 : 0
+            newMapObject.pos.y = map.orientation == TileMap.Isometric ? -map.tileHeight : 0
+            newMapObject.height = map.height * map.tileHeight / 2
+            newMapObject.width = map.width * map.tileWidth
+            newObjectLayer.addObject(newMapObject)
+        }
+        map.addLayer(newObjectLayer)
+    } catch (e) {
+        tiled.error(`${e}`, () => {})
     }
 });
 

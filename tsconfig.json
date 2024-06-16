@@ -2,11 +2,12 @@
   "compilerOptions": {
     "module": "commonjs",
     "rootDir": "./src",
-     "types": ["@mapeditor/tiled-api"],
+     "types": ["@mapeditor/tiled-api", "@types/jest"],
 
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "lib": ["ES2016"],
     "skipLibCheck": true
   }
 }
