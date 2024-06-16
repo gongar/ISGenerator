@@ -11,12 +11,6 @@ const steps = {
     w: { x: -1, y: 0 }
 } as const
 
-interface Vertex {
-    x: number
-    y: number
-    dir: keyof typeof steps | null
-}
-
 export function getIslandShores(layer: TileLayer, map: TileMap): Polygon[] {
     const width = layer.width
     const height = layer.height
@@ -56,33 +50,32 @@ function createIslandShore(
         islandId: number, map: TileMap
     }): Polygon {
     const { islandMap, neighbors, height, width, islandId, map } = o
-    const poligon: Pair[] = []
-
 
     const start = findStartVertex({
         neighbors, islandMap, height, width, islandId
     })
     if (!start) {
-        throw Error("No tile found")
+        throw Error("Unknown Error")
     }
 
-    const current: Vertex = { x: start.x, y: start.y, dir: null }
-    const stack: Vertex[] = []
-    const visited = new Set([start.y * (width + 1) + start.x]);
+    let { x, y } = start
+    const visited = new Set([y * (width + 1) + x])
+    const polygon: point[] = []
 
     do {
-        stack.push({ x: current.x, y: current.y, dir: current.dir })
+        polygon.push({x, y})
 
         let found = false
-        for (let dir of directions) {
-            const x = current.x + steps[dir].x
-            const y = current.y + steps[dir].y
-            const c = neighbors[y * (width + 1) + x]
-            if (x >= 0 && x <= width && y >= 0 && y <= height && c > 0 && c < 4 && !visited.has(y * (width + 1) + x)) {
+        for (let d of directions) {
+            const new_x = x + steps[d].x
+            const new_y = y + steps[d].y
+            const c = neighbors[new_y * (width + 1) + new_x]
+            if (
+                new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
+                && c > 0 && c < 4 && !visited.has(new_y * (width + 1) + new_x)) {
+                x = new_x
+                y = new_y
                 visited.add(y * (width + 1) + x)
-                current.x = x
-                current.y = y
-                current.dir = dir
                 found = true
                 break
             }
@@ -91,18 +84,30 @@ function createIslandShore(
         if (!found) {
             break
         }
-    } while (current.x != start.x || current.y != start.y)
+    } while (x != start.x || y != start.y)
 
-    let p: any
-    while (stack.length > 0) {
-        const c = stack.pop()!
-        if (p != c.dir && p !== undefined) {
-            poligon.push(map.tileToPixel(c.x, c.y))
+    return simplifyVertices(polygon).map(p => map.tileToPixel(p.x, p.y))
+}
+
+// It removes the extra vertices but keeps the same shape
+function  simplifyVertices(polygon: point[]): point[] {
+    let simplified: point[] = []
+    let size = polygon.length
+    let last = polygon[size - 1]
+    let first = polygon[0]
+
+    for (let i =0; i < size; i++) {
+        let prev = polygon[i - 1] || last
+        let curr = polygon[i]
+        let next = polygon[i + 1] || first
+
+        if ((prev.x == curr.x && curr.x == next.x) || (prev.y == curr.y && curr.y == next.y)) {
+            continue
         }
-        p = c.dir
+        simplified.push(curr)
     }
 
-    return poligon
+    return simplified
 }
 
 function findStartVertex(o: {
@@ -130,7 +135,7 @@ function findStartVertex(o: {
 }
 
 /** 
- * It counts neighbor tiles for every tile's vertex
+ * It counts the neighboring tiles for each vertex of each tile.
  */
 function countNeighbors(
     o: {

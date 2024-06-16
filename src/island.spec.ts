@@ -29,7 +29,7 @@ describe("Polygon Generation", () => {
         mockedTileLayer = mock<TileLayer>()
     })
 
-    test("One island without any inner shores", () => {
+    test("One island with no inner shores", () => {
         when(mockedTileLayer.width).thenReturn(data.tileWidth1)
         when(mockedTileLayer.height).thenReturn(data.tileHeight1)
         const map = instance(mockedTileMap)
