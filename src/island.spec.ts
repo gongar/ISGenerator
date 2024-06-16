@@ -1,147 +1,55 @@
 import { instance, mock, when } from 'ts-mockito'
 import { getIslandShores } from "./island"
+import data from "../test-data.json"
 
-const tileMap1 = [
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-    0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-    0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0,
-    0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0,
-    0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-] as const
+function setupMap(
+    mockedTileMap: TileMap, mockedTileLayer: TileLayer, mockedTile: Tile,
+    map: number[], height: number, width: number) {
+    for (let i = 0; i <= height; i++) {
+        for (let j = 0; j <= width; j++) {
+            when(mockedTileMap.tileToPixel(j, i)).thenReturn({ x: j, y: i })
+        }
+    }
 
-const polygons1 = [
-    [
-        {
-            x: 6,
-            y: 4,
-        },
-        {
-            x: 1,
-            y: 4,
-        },
-        {
-            x: 1,
-            y: 6,
-        },
-        {
-            x: 2,
-            y: 6,
-        },
-        {
-            x: 2,
-            y: 7,
-        },
-        {
-            x: 1,
-            y: 7,
-        },
-        {
-            x: 1,
-            y: 9,
-        },
-        {
-            x: 3,
-            y: 9,
-        },
-        {
-            x: 3,
-            y: 12,
-        },
-        {
-            x: 7,
-            y: 12,
-        },
-        {
-            x: 7,
-            y: 9,
-        },
-        {
-            x: 10,
-            y: 9,
-        },
-        {
-            x: 10,
-            y: 11,
-        },
-        {
-            x: 13,
-            y: 11,
-        },
-        {
-            x: 13,
-            y: 9,
-        },
-        {
-            x: 16,
-            y: 9,
-        },
-        {
-            x: 16,
-            y: 4,
-        },
-        {
-            x: 14,
-            y: 4,
-        },
-        {
-            x: 14,
-            y: 5,
-        },
-        {
-            x: 9,
-            y: 5,
-        },
-        {
-            x: 9,
-            y: 2,
-        },
-        {
-            x: 7,
-            y: 2,
-        },
-    ]
-];
-
-const tileWidth = 18
-const tileHeight = 14
+    for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+            when(mockedTileLayer.tileAt(j, i)).thenReturn(map[i * width + j] ? instance(mockedTile) : null)
+        }
+    }
+}
 
 describe("Polygon Generation", () => {
+    let mockedTileMap: TileMap
+    let mockedTile: Tile
+    let mockedTileLayer: TileLayer
+
+    beforeEach(() => {
+        mockedTileMap = mock<TileMap>()
+        mockedTile = mock<Tile>()
+        mockedTileLayer = mock<TileLayer>()
+    })
+
     test("One island without any inner shores", () => {
-        const mockedTileMap = mock<TileMap>()
-        const mockedTile = mock<Tile>()
+        when(mockedTileLayer.width).thenReturn(data.tileWidth1)
+        when(mockedTileLayer.height).thenReturn(data.tileHeight1)
         const map = instance(mockedTileMap)
-        const mockedTileLayer = mock<TileLayer>()
         const layer = instance(mockedTileLayer)
-        const mockedRegion = mock<region>()
-        const regionInstance = instance(mockedRegion)
 
-        when(mockedTileLayer.width).thenReturn(tileWidth)
-        when(mockedTileLayer.height).thenReturn(tileHeight)
-        when(mockedTileLayer.region()).thenReturn(regionInstance)
-
-        for (let i = 0; i <= tileHeight; i++) {
-            for (let j = 0; j <= tileWidth; j++) {
-                when(mockedTileMap.tileToPixel(j, i)).thenReturn({ x: j, y: i })
-            }
-        }
-
-        for (let i = 0; i < tileHeight; i++) {
-            for (let j = 0; j < tileWidth; j++) {
-                when(mockedTileLayer.tileAt(j, i)).thenReturn(tileMap1[i * tileWidth + j] ? instance(mockedTile) : null)
-            }
-        }
+        setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map1, data.tileHeight1, data.tileWidth1)
 
         const polygons = getIslandShores(layer, map)
+        expect(polygons).toContainEqual<Polygon>(data.polygons1[0])
+    })
 
-        expect(polygons).toContainEqual<Polygon>(polygons1[0])
+    test("One tile island", () => {
+        when(mockedTileLayer.width).thenReturn(data.tileWidth2)
+        when(mockedTileLayer.height).thenReturn(data.tileHeight2)
+        const map = instance(mockedTileMap)
+        const layer = instance(mockedTileLayer)
+
+        setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map2, data.tileHeight2, data.tileWidth2)
+
+        const polygons = getIslandShores(layer, map)
+        expect(polygons).toContainEqual<Polygon>(data.polygons2[0])
     })
 })
