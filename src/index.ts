@@ -27,10 +27,6 @@ const action = tiled.registerAction("IslandShores", function() {
             const newMapObject = new MapObject()
             newMapObject.polygon = island
             newMapObject.shape = MapObject.Polygon
-            newMapObject.pos.x = map.orientation == TileMap.Isometric ? -map.tileWidth / 2 : 0
-            newMapObject.pos.y = map.orientation == TileMap.Isometric ? -map.tileHeight : 0
-            newMapObject.height = map.height * map.tileHeight / 2
-            newMapObject.width = map.width * map.tileWidth
             newObjectLayer.addObject(newMapObject)
         }
         map.addLayer(newObjectLayer)
