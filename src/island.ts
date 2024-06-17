@@ -24,7 +24,7 @@ export function getIslandShores(layer: TileLayer, map: TileMap): Polygon[] {
 
     let shores: Polygon[] = []
     for (let islandId of islandIds) {
-        shores.push(createIslandShore({ neighbors, height, width, islandId, islandMap, map }))
+        shores.push(createIslandShore({ tileMap, neighbors, height, width, islandId, islandMap, map }))
     }
 
     return shores
@@ -45,11 +45,11 @@ function initTileMap(o: { tileMap: boolean[], layer: TileLayer, height: number, 
  */
 function createIslandShore(
     o: {
-        islandMap: number[],
+        tileMap: boolean[], islandMap: number[],
         neighbors: number[], height: number, width: number,
         islandId: number, map: TileMap
     }): Polygon {
-    const { islandMap, neighbors, height, width, islandId, map } = o
+    const { tileMap, islandMap, neighbors, height, width, islandId, map } = o
 
     const start = findStartVertex({
         neighbors, islandMap, height, width, islandId
@@ -63,7 +63,7 @@ function createIslandShore(
     const polygon: point[] = []
 
     do {
-        polygon.push({x, y})
+        polygon.push({ x, y })
 
         let found = false
         for (let d of directions) {
@@ -72,7 +72,8 @@ function createIslandShore(
             const c = neighbors[new_y * (width + 1) + new_x]
             if (
                 new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
-                && c > 0 && c < 4 && !visited.has(new_y * (width + 1) + new_x)) {
+                && c > 0 && c < 4 && !visited.has(new_y * (width + 1) + new_x)
+                && isAdjacent({x, y}, {x: new_x, y: new_y}, {tileMap, width})) {
                 x = new_x
                 y = new_y
                 visited.add(y * (width + 1) + x)
@@ -89,14 +90,30 @@ function createIslandShore(
     return simplifyVertices(polygon).map(p => map.tileToPixel(p.x, p.y))
 }
 
+function isAdjacent(a: point, b: point, o: {tileMap: boolean[], width: number}):  boolean {
+    const { tileMap, width } = o
+
+    if (Math.abs(a.x - b.x) > 1 || Math.abs(a.y - b.y) > 1) return false
+
+    if (a.x == b.x) {
+        const c = a.y > b.y ? b : a
+        return tileMap[c.y * width + c.x] || tileMap[c.y * width + c.x - 1]
+    } else if (a.y == b.y) {
+        const c = a.x > b.x ? b : a
+        return tileMap[c.y * width + c.x] || tileMap[(c.y - 1) * width + c.x]
+    }
+
+    return false
+}
+
 // It removes the extra vertices but keeps the same shape
-function  simplifyVertices(polygon: point[]): point[] {
+function simplifyVertices(polygon: point[]): point[] {
     let simplified: point[] = []
     let size = polygon.length
     let last = polygon[size - 1]
     let first = polygon[0]
 
-    for (let i =0; i < size; i++) {
+    for (let i = 0; i < size; i++) {
         let prev = polygon[i - 1] || last
         let curr = polygon[i]
         let next = polygon[i + 1] || first
@@ -116,17 +133,15 @@ function findStartVertex(o: {
 }): Pair | null {
     const { islandMap, neighbors, height, width, islandId } = o
 
-    for (let i = 0; i < height; i++) {
-        for (let j = 0; j < width; j++) {
-            if (islandMap[i * width + j] != islandId) {
-                continue;
+    for (let i = 0; i <= height; i++) {
+        for (let j = 0; j <= width; j++) {
+            const c = neighbors[i * (width + 1) + j]
+            if (c >= 4 || c < 0) {
+                continue
             }
 
-            for (let dir of directions) {
-                const c = neighbors[(i + steps[dir].y) * width + j + steps[dir].x]
-                if (c < 4 && c > 0) {
-                    return { x: j, y: i }
-                }
+            if (islandMap[(i % width) * width + (j % width)] == islandId) {
+                return { x: j, y: i }
             }
         }
     }
@@ -177,7 +192,7 @@ function classifyIslands(
 
     for (let i = 0; i < height; i++) {
         for (let j = 0; j < width; j++) {
-            islandMap[i * width + 1 + j] = 0
+            islandMap[i * width + j] = 0
         }
     }
 
@@ -224,7 +239,6 @@ function floodFill(
         }
 
         islandMap[pair.y * width + pair.x] = islandId
-
 
         stack.push({ x: pair.x + 1, y: pair.y })
         stack.push({ x: pair.x - 1, y: pair.y })

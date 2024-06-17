@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "lib": ["ES2016"],
+    "lib": ["ES2016", "DOM"],
     "skipLibCheck": true,
     "resolveJsonModule": true
   }

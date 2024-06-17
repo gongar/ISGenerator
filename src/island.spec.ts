@@ -37,11 +37,18 @@ describe("Polygon Generation", () => {
 
         setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map1, data.tileHeight1, data.tileWidth1)
 
+        
+
         const polygons = getIslandShores(layer, map)
-        expect(polygons).toContainEqual<Polygon>(data.polygons1[0])
+        data.polygons1[0].forEach(p => {
+            expect(polygons[0]).toContainEqual<point>(p)
+        })
+        polygons[0].forEach(p => {
+            expect(data.polygons1[0]).toContainEqual<point>(p)
+        })
     })
 
-    test("One tile island", () => {
+    test("One tile island - 3x3 center", () => {
         when(mockedTileLayer.width).thenReturn(data.tileWidth2)
         when(mockedTileLayer.height).thenReturn(data.tileHeight2)
         const map = instance(mockedTileMap)
@@ -51,5 +58,29 @@ describe("Polygon Generation", () => {
 
         const polygons = getIslandShores(layer, map)
         expect(polygons).toContainEqual<Polygon>(data.polygons2[0])
+    })
+
+    test("One tile island - 3x3 top left", () => {
+        when(mockedTileLayer.width).thenReturn(data.tileWidth3)
+        when(mockedTileLayer.height).thenReturn(data.tileHeight3)
+        const map = instance(mockedTileMap)
+        const layer = instance(mockedTileLayer)
+
+        setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map3, data.tileHeight3, data.tileWidth3)
+
+        const polygons = getIslandShores(layer, map)
+        expect(polygons).toContainEqual<Polygon>(data.polygons3[0])
+    })
+
+    test("One tile island - 6x5 bottom left", () => {
+        when(mockedTileLayer.width).thenReturn(data.tileWidth4)
+        when(mockedTileLayer.height).thenReturn(data.tileHeight4)
+        const map = instance(mockedTileMap)
+        const layer = instance(mockedTileLayer)
+
+        setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map4, data.tileHeight4, data.tileWidth4)
+
+        const polygons = getIslandShores(layer, map)
+        expect(polygons).toContainEqual<Polygon>(data.polygons4[0])
     })
 })
