@@ -108,4 +108,16 @@ describe("Polygon Generation", () => {
         expect(polygons).toContainEqual<Polygon>(data.polygons6[0])
         expect(polygons).toContainEqual<Polygon>(data.polygons6[1])
     })
+
+    test("Whole area island - 2x2", () => {
+        when(mockedTileLayer.width).thenReturn(data.tileWidth7)
+        when(mockedTileLayer.height).thenReturn(data.tileHeight7)
+        const map = instance(mockedTileMap)
+        const layer = instance(mockedTileLayer)
+
+        setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map7, data.tileHeight7, data.tileWidth7)
+
+        const polygons = getIslandShores(layer, map)
+        expect(polygons).toContainEqual<Polygon>(data.polygons7[0])
+    })
 })

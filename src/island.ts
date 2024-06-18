@@ -16,26 +16,35 @@ export function getIslandShores(layer: TileLayer, map: TileMap): Polygon[] {
     const height = layer.height
     const tileMap: boolean[] = []
     const islandMap: number[] = []
-    const neighbors: (number)[] = []
+    const invertedTileMap: boolean[] = []
+    // const waterMap: number[] = []
+    const neighbors: number[] = []
+    // const waterNeighbors: number[] = []
 
-    initTileMap({ tileMap, layer, width, height })
+    initTileMap({ tileMap, invertedTileMap, layer, width, height })
     countNeighbors({ tileMap, neighbors, width, height })
+    // countNeighbors({ tileMap: invertedTileMap, neighbors: waterNeighbors, width, height })
     let islandIds = classifyIslands({ tileMap, islandMap, height, width })
+    // let waterIds = classifyIslands({ tileMap: invertedTileMap, islandMap: waterMap, height, width })
 
     let shores: Polygon[] = []
     for (let islandId of islandIds) {
         shores.push(createIslandShore({ tileMap, neighbors, height, width, islandId, islandMap, map }))
     }
+    // for (let waterId of waterIds) {
+    //     shores.push(createIslandShore({ tileMap: invertedTileMap, neighbors:waterNeighbors, height, width, islandId: waterId, islandMap: waterMap, map }))
+    // }
 
     return shores
 }
 
-function initTileMap(o: { tileMap: boolean[], layer: TileLayer, height: number, width: number, }) {
-    const { tileMap, height, width, layer } = o
+function initTileMap(o: { tileMap: boolean[], invertedTileMap: boolean[], layer: TileLayer, height: number, width: number, }) {
+    const { tileMap, invertedTileMap, height, width, layer } = o
     for (let i = 0; i < height; i++) {
         for (let j = 0; j < width; j++) {
             const tile = layer.tileAt(j, i)
             tileMap[i * width + j] = !!tile
+            invertedTileMap[i * width + j] = !tileMap[i * width + j]
         }
     }
 }
@@ -59,7 +68,7 @@ function createIslandShore(
     }
 
     let { x, y } = start
-    const visited = new Set([y * (width + 1) + x])
+    const visited = new Set<number>([y * (width + 1) + x])
     const polygon: point[] = []
 
     do {
@@ -72,10 +81,10 @@ function createIslandShore(
             const c = neighbors[new_y * (width + 1) + new_x]
             if (
                 new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
-                && c > 0 && c < 4 
+                && c > 0 && c < 4
                 && !visited.has(new_y * (width + 1) + new_x)
-                && isEdge({x, y}, {x: new_x, y: new_y}, {tileMap, width})
-                && isBelongsToIslandId(new_x, new_y, islandId, {islandMap, width})) {
+                && isEdge({ x, y }, { x: new_x, y: new_y }, { tileMap, width })
+                && isBelongsToIslandId(new_x, new_y, islandId, { islandMap, width })) {
                 x = new_x
                 y = new_y
                 visited.add(y * (width + 1) + x)
@@ -92,10 +101,10 @@ function createIslandShore(
     return simplifyVertices(polygon).map(p => map.tileToPixel(p.x, p.y))
 }
 
-function isBelongsToIslandId(x: number, y: number, islandId: number, o: {islandMap: number[], width: number}) {
-    const {islandMap, width} = o
+function isBelongsToIslandId(x: number, y: number, islandId: number, o: { islandMap: number[], width: number }) {
+    const { islandMap, width } = o
 
-    for (let s of [{x: 0, y: 0}, { x: -1, y: 0 }, { x: -1, y: -1}, { x: 0, y: -1 }]) {
+    for (let s of [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: -1, y: -1 }, { x: 0, y: -1 }]) {
         const x1 = x + s.x
         const y1 = y + s.y
         if (islandMap[y1 * width + x1] == islandId) {
@@ -106,14 +115,14 @@ function isBelongsToIslandId(x: number, y: number, islandId: number, o: {islandM
     return false
 }
 
-function isEdge(a: point, b: point, o: {tileMap: boolean[], width: number}):  boolean {
+function isEdge(a: point, b: point, o: { tileMap: boolean[], width: number }): boolean {
     const { tileMap, width } = o
 
     if (Math.abs(a.x - b.x) > 1 || Math.abs(a.y - b.y) > 1) return false
 
     if (a.x == b.x) {
         const c = a.y > b.y ? b : a
-        return tileMap[c.y * width + c.x] !== tileMap[c.y * width + c.x - 1]
+        return (tileMap[c.y * width + c.x] && (c.x < width)) !== (tileMap[c.y * width + c.x - 1] && (c.x > 0))
     } else if (a.y == b.y) {
         const c = a.x > b.x ? b : a
         return tileMap[c.y * width + c.x] !== tileMap[(c.y - 1) * width + c.x]
