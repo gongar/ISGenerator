@@ -73,7 +73,7 @@ function createIslandShore(
             if (
                 new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
                 && c > 0 && c < 4 && !visited.has(new_y * (width + 1) + new_x)
-                && isAdjacent({x, y}, {x: new_x, y: new_y}, {tileMap, width})) {
+                && isEdge({x, y}, {x: new_x, y: new_y}, {tileMap, width})) {
                 x = new_x
                 y = new_y
                 visited.add(y * (width + 1) + x)
@@ -90,17 +90,17 @@ function createIslandShore(
     return simplifyVertices(polygon).map(p => map.tileToPixel(p.x, p.y))
 }
 
-function isAdjacent(a: point, b: point, o: {tileMap: boolean[], width: number}):  boolean {
+function isEdge(a: point, b: point, o: {tileMap: boolean[], width: number}):  boolean {
     const { tileMap, width } = o
 
     if (Math.abs(a.x - b.x) > 1 || Math.abs(a.y - b.y) > 1) return false
 
     if (a.x == b.x) {
         const c = a.y > b.y ? b : a
-        return tileMap[c.y * width + c.x] || tileMap[c.y * width + c.x - 1]
+        return tileMap[c.y * width + c.x] !== tileMap[c.y * width + c.x - 1]
     } else if (a.y == b.y) {
         const c = a.x > b.x ? b : a
-        return tileMap[c.y * width + c.x] || tileMap[(c.y - 1) * width + c.x]
+        return tileMap[c.y * width + c.x] !== tileMap[(c.y - 1) * width + c.x]
     }
 
     return false

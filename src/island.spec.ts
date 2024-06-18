@@ -83,4 +83,16 @@ describe("Polygon Generation", () => {
         const polygons = getIslandShores(layer, map)
         expect(polygons).toContainEqual<Polygon>(data.polygons4[0])
     })
+
+    test("One tile height island - 5x5 center", () => {
+        when(mockedTileLayer.width).thenReturn(data.tileWidth5)
+        when(mockedTileLayer.height).thenReturn(data.tileHeight5)
+        const map = instance(mockedTileMap)
+        const layer = instance(mockedTileLayer)
+
+        setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map5, data.tileHeight5, data.tileWidth5)
+
+        const polygons = getIslandShores(layer, map)
+        expect(polygons).toContainEqual<Polygon>(data.polygons5[0])
+    })
 })
