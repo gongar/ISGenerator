@@ -41,7 +41,7 @@ function initTileMap(o: { tileMap: boolean[], layer: TileLayer, height: number, 
 }
 
 /**
- * It creates a polygon that exactly fits the areas that are continuously tiled.
+ * Creates a polygon that exactly fits the areas that are continuously tiled.
  */
 function createIslandShore(
     o: {
@@ -72,8 +72,10 @@ function createIslandShore(
             const c = neighbors[new_y * (width + 1) + new_x]
             if (
                 new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
-                && c > 0 && c < 4 && !visited.has(new_y * (width + 1) + new_x)
-                && isEdge({x, y}, {x: new_x, y: new_y}, {tileMap, width})) {
+                && c > 0 && c < 4 
+                && !visited.has(new_y * (width + 1) + new_x)
+                && isEdge({x, y}, {x: new_x, y: new_y}, {tileMap, width})
+                && isBelongsToIslandId(new_x, new_y, islandId, {islandMap, width})) {
                 x = new_x
                 y = new_y
                 visited.add(y * (width + 1) + x)
@@ -88,6 +90,20 @@ function createIslandShore(
     } while (x != start.x || y != start.y)
 
     return simplifyVertices(polygon).map(p => map.tileToPixel(p.x, p.y))
+}
+
+function isBelongsToIslandId(x: number, y: number, islandId: number, o: {islandMap: number[], width: number}) {
+    const {islandMap, width} = o
+
+    for (let s of [{x: 0, y: 0}, { x: -1, y: 0 }, { x: -1, y: -1}, { x: 0, y: -1 }]) {
+        const x1 = x + s.x
+        const y1 = y + s.y
+        if (islandMap[y1 * width + x1] == islandId) {
+            return true
+        }
+    }
+
+    return false
 }
 
 function isEdge(a: point, b: point, o: {tileMap: boolean[], width: number}):  boolean {
@@ -106,7 +122,9 @@ function isEdge(a: point, b: point, o: {tileMap: boolean[], width: number}):  bo
     return false
 }
 
-// It removes the extra vertices but keeps the same shape
+/** 
+ * Removes the extra vertices but keeps the same shape
+ * */
 function simplifyVertices(polygon: point[]): point[] {
     let simplified: point[] = []
     let size = polygon.length
@@ -150,7 +168,7 @@ function findStartVertex(o: {
 }
 
 /** 
- * It counts the neighboring tiles for each vertex of each tile.
+ * Counts the neighboring tiles for each vertex of each tile.
  */
 function countNeighbors(
     o: {
@@ -178,7 +196,7 @@ function countNeighbors(
 }
 
 /**
- * It fills the islandMap with numbers which represent island ids
+ * Fills the islandMap with numbers which represent island ids.
  * It gives us to know which tile at the point (i,j) belongs to which island
  */
 function classifyIslands(
@@ -213,7 +231,7 @@ function classifyIslands(
 }
 
 /**
- *  This is Flood Fill algorithm, which fills adjacent tiles with the same islandId value
+ *  Flood Fill algorithm, which fills adjacent tiles with the same islandId value
  */
 function floodFill(
     o: {
