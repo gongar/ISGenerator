@@ -12,14 +12,13 @@ const action = tiled.registerAction("IslandShores", function() {
         return;
     }
 
-    if (map.orientation == TileMap.Staggered || map.orientation == TileMap.Hexagonal || map.infinite) {
-        tiled.alert("Warning!", "Staggered, hexagonal and infinite maps are not currently supported")
+    if (map.orientation == TileMap.Staggered || map.orientation == TileMap.Hexagonal) {
+        tiled.alert("Staggered and hexagonal are not currently supported")
         return
     }
 
     try {
         const islands = getIslandShores(layer as TileLayer, map)
-
         const newObjectLayer = new ObjectGroup()
         newObjectLayer.name = `Island Shores (${layer.name})`
 

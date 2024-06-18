@@ -11,9 +11,16 @@ const steps = {
     w: { x: -1, y: 0 }
 } as const
 
+interface TileExists {
+    (x: number, y: number): boolean
+}
+
 export function getIslandShores(layer: TileLayer, map: TileMap): Polygon[] {
-    const width = layer.width
-    const height = layer.height
+    const region = layer.region()
+    const width = map.infinite ? region.boundingRect.width : layer.width
+    const height = map.infinite ? region.boundingRect.height : layer.height
+    const offsetX = map.infinite ? region.boundingRect.x : 0
+    const offsetY = map.infinite ? region.boundingRect.y : 0
     const tileMap: boolean[] = []
     const islandMap: number[] = []
     const invertedTileMap: boolean[] = []
@@ -21,7 +28,9 @@ export function getIslandShores(layer: TileLayer, map: TileMap): Polygon[] {
     const neighbors: number[] = []
     const waterNeighbors: number[] = []
 
-    initTileMap({ tileMap, invertedTileMap, layer, width, height })
+    const tileExists = (j: number, i: number) => !!layer.tileAt(j + offsetX, i + offsetY)
+
+    initTileMap({ tileMap, invertedTileMap, width, height, tileExists })
     countNeighbors({ tileMap, neighbors, width, height })
     countNeighbors({ tileMap: invertedTileMap, neighbors: waterNeighbors, width, height })
     let islandIds = classifyIslands({ tileMap, islandMap, height, width })
@@ -29,24 +38,29 @@ export function getIslandShores(layer: TileLayer, map: TileMap): Polygon[] {
 
     let shores: Polygon[] = []
     for (let islandId of islandIds) {
-        shores.push(createIslandShore({ tileMap, neighbors, height, width, islandId, islandMap, map }))
+        shores.push(createIslandShore({ tileMap, neighbors, height, width, islandId, islandMap }))
     }
     for (let waterId of waterIds) {
-        const polygon = createIslandShore({ tileMap: invertedTileMap, neighbors: waterNeighbors, height, width, islandId: waterId, islandMap: waterMap, map })
+        const polygon = createIslandShore({
+            tileMap: invertedTileMap, neighbors: waterNeighbors,
+            height, width, islandId: waterId, islandMap: waterMap
+        })
         if (isInnerWaters(polygon, width, height)) {
             shores.push(polygon)
         }
     }
 
-    return shores.map(s => s.map(p => map.tileToPixel(p.x, p.y)))
+    return shores.map(s => s.map(p => map.tileToPixel(p.x + offsetX, p.y + offsetY)))
 }
 
-function initTileMap(o: { tileMap: boolean[], invertedTileMap: boolean[], layer: TileLayer, height: number, width: number, }) {
-    const { tileMap, invertedTileMap, height, width, layer } = o
+function initTileMap(o: {
+    tileMap: boolean[], invertedTileMap: boolean[],
+    height: number, width: number, tileExists: TileExists
+}) {
+    const { tileMap, invertedTileMap, height, width, tileExists } = o
     for (let i = 0; i < height; i++) {
         for (let j = 0; j < width; j++) {
-            const tile = layer.tileAt(j, i)
-            tileMap[i * width + j] = !!tile
+            tileMap[i * width + j] = tileExists(j, i)
             invertedTileMap[i * width + j] = !tileMap[i * width + j]
         }
     }
@@ -59,9 +73,9 @@ function createIslandShore(
     o: {
         tileMap: boolean[], islandMap: number[],
         neighbors: number[], height: number, width: number,
-        islandId: number, map: TileMap
+        islandId: number
     }): Polygon {
-    const { tileMap, islandMap, neighbors, height, width, islandId, map } = o
+    const { tileMap, islandMap, neighbors, height, width, islandId } = o
 
     const start = findStartVertex({
         neighbors, islandMap, height, width, islandId
@@ -86,7 +100,7 @@ function createIslandShore(
                 new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
                 && c > 0 && c < 4
                 && isEdge({ x, y }, { x: new_x, y: new_y }, { tileMap, width })
-                && isBelongsToIsland(new_x, new_y, islandId, { islandMap, width })
+                && isBelongToIsland(new_x, new_y, islandId, { islandMap, width })
                 && !visited.has(new_y * (width + 1) + new_x)) {
                 x = new_x
                 y = new_y
@@ -104,7 +118,7 @@ function createIslandShore(
     return simplifyVertices(polygon)
 }
 
-function isBelongsToIsland(x: number, y: number, islandId: number, o: { islandMap: number[], width: number }) {
+function isBelongToIsland(x: number, y: number, islandId: number, o: { islandMap: number[], width: number }) {
     const { islandMap, width } = o
 
     for (let s of [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: -1, y: -1 }, { x: 0, y: -1 }]) {
@@ -170,7 +184,7 @@ function findStartVertex(o: {
                 continue
             }
 
-            if (islandMap[(i % width) * width + (j % width)] == islandId) {
+            if (islandMap[(i % height) * width + (j % width)] == islandId) {
                 return { x: j, y: i }
             }
         }

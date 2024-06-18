@@ -27,6 +27,10 @@ describe("Polygon Generation", () => {
         mockedTileMap = mock<TileMap>()
         mockedTile = mock<Tile>()
         mockedTileLayer = mock<TileLayer>()
+        when(mockedTileMap.infinite).thenReturn(false)
+        when(mockedTileLayer.region()).thenReturn({
+            boundingRect: { x: 0, y: 0, width: 0, height: 0 },
+        } as region)
     })
 
     test("One island with no inner shores", () => {
