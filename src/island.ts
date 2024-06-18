@@ -17,25 +17,28 @@ export function getIslandShores(layer: TileLayer, map: TileMap): Polygon[] {
     const tileMap: boolean[] = []
     const islandMap: number[] = []
     const invertedTileMap: boolean[] = []
-    // const waterMap: number[] = []
+    const waterMap: number[] = []
     const neighbors: number[] = []
-    // const waterNeighbors: number[] = []
+    const waterNeighbors: number[] = []
 
     initTileMap({ tileMap, invertedTileMap, layer, width, height })
     countNeighbors({ tileMap, neighbors, width, height })
-    // countNeighbors({ tileMap: invertedTileMap, neighbors: waterNeighbors, width, height })
+    countNeighbors({ tileMap: invertedTileMap, neighbors: waterNeighbors, width, height })
     let islandIds = classifyIslands({ tileMap, islandMap, height, width })
-    // let waterIds = classifyIslands({ tileMap: invertedTileMap, islandMap: waterMap, height, width })
+    let waterIds = classifyIslands({ tileMap: invertedTileMap, islandMap: waterMap, height, width })
 
     let shores: Polygon[] = []
     for (let islandId of islandIds) {
         shores.push(createIslandShore({ tileMap, neighbors, height, width, islandId, islandMap, map }))
     }
-    // for (let waterId of waterIds) {
-    //     shores.push(createIslandShore({ tileMap: invertedTileMap, neighbors:waterNeighbors, height, width, islandId: waterId, islandMap: waterMap, map }))
-    // }
+    for (let waterId of waterIds) {
+        const polygon = createIslandShore({ tileMap: invertedTileMap, neighbors: waterNeighbors, height, width, islandId: waterId, islandMap: waterMap, map })
+        if (isInnerWaters(polygon, width, height)) {
+            shores.push(polygon)
+        }
+    }
 
-    return shores
+    return shores.map(s => s.map(p => map.tileToPixel(p.x, p.y)))
 }
 
 function initTileMap(o: { tileMap: boolean[], invertedTileMap: boolean[], layer: TileLayer, height: number, width: number, }) {
@@ -82,9 +85,9 @@ function createIslandShore(
             if (
                 new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
                 && c > 0 && c < 4
-                && !visited.has(new_y * (width + 1) + new_x)
                 && isEdge({ x, y }, { x: new_x, y: new_y }, { tileMap, width })
-                && isBelongsToIslandId(new_x, new_y, islandId, { islandMap, width })) {
+                && isBelongsToIsland(new_x, new_y, islandId, { islandMap, width })
+                && !visited.has(new_y * (width + 1) + new_x)) {
                 x = new_x
                 y = new_y
                 visited.add(y * (width + 1) + x)
@@ -98,10 +101,10 @@ function createIslandShore(
         }
     } while (x != start.x || y != start.y)
 
-    return simplifyVertices(polygon).map(p => map.tileToPixel(p.x, p.y))
+    return simplifyVertices(polygon)
 }
 
-function isBelongsToIslandId(x: number, y: number, islandId: number, o: { islandMap: number[], width: number }) {
+function isBelongsToIsland(x: number, y: number, islandId: number, o: { islandMap: number[], width: number }) {
     const { islandMap, width } = o
 
     for (let s of [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: -1, y: -1 }, { x: 0, y: -1 }]) {
@@ -202,6 +205,16 @@ function countNeighbors(
             }
         }
     }
+}
+
+function isInnerWaters(polygon: point[], width: number, height: number) {
+    for (let p of polygon) {
+        if (p.x == 0 || p.x == width || p.y == 0 || p.y == height) {
+            return false
+        }
+    }
+
+    return true
 }
 
 /**

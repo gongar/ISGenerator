@@ -37,8 +37,6 @@ describe("Polygon Generation", () => {
 
         setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map1, data.tileHeight1, data.tileWidth1)
 
-        
-
         const polygons = getIslandShores(layer, map)
         data.polygons1[0].forEach(p => {
             expect(polygons[0]).toContainEqual<point>(p)
@@ -119,5 +117,19 @@ describe("Polygon Generation", () => {
 
         const polygons = getIslandShores(layer, map)
         expect(polygons).toContainEqual<Polygon>(data.polygons7[0])
+    })
+
+    test("Island with two lakes - 9x9", () => {
+        when(mockedTileLayer.width).thenReturn(data.tileWidth8)
+        when(mockedTileLayer.height).thenReturn(data.tileHeight8)
+        const map = instance(mockedTileMap)
+        const layer = instance(mockedTileLayer)
+
+        setupMap(mockedTileMap, mockedTileLayer, mockedTile, data.map8, data.tileHeight8, data.tileWidth8)
+
+        const polygons = getIslandShores(layer, map)
+        expect(polygons).toContainEqual<Polygon>(data.polygons8[0])
+        expect(polygons).toContainEqual<Polygon>(data.polygons8[1])
+        expect(polygons).toContainEqual<Polygon>(data.polygons8[2])
     })
 })
