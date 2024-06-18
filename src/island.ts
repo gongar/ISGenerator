@@ -100,7 +100,7 @@ function createIslandShore(
                 new_x >= 0 && new_x <= width && new_y >= 0 && new_y <= height
                 && c > 0 && c < 4
                 && isEdge({ x, y }, { x: new_x, y: new_y }, { tileMap, width })
-                && isBelongToIsland(new_x, new_y, islandId, { islandMap, width })
+                && belongToIsland(new_x, new_y, islandId, { islandMap, width })
                 && !visited.has(new_y * (width + 1) + new_x)) {
                 x = new_x
                 y = new_y
@@ -118,7 +118,7 @@ function createIslandShore(
     return simplifyVertices(polygon)
 }
 
-function isBelongToIsland(x: number, y: number, islandId: number, o: { islandMap: number[], width: number }) {
+function belongToIsland(x: number, y: number, islandId: number, o: { islandMap: number[], width: number }) {
     const { islandMap, width } = o
 
     for (let s of [{ x: 0, y: 0 }, { x: -1, y: 0 }, { x: -1, y: -1 }, { x: 0, y: -1 }]) {

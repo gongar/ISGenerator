@@ -20,6 +20,8 @@ const action = tiled.registerAction("IslandShores", function() {
     try {
         const islands = getIslandShores(layer as TileLayer, map)
         const newObjectLayer = new ObjectGroup()
+        newObjectLayer.offset.x = layer.offset.x
+        newObjectLayer.offset.y = layer.offset.y
         newObjectLayer.name = `Island Shores (${layer.name})`
 
         for (let island of islands) {
@@ -34,7 +36,8 @@ const action = tiled.registerAction("IslandShores", function() {
     }
 });
 
-action.text = "Generate Island Shores"
+action.text = "Create Island Shores"
+action.iconVisibleInMenu = false
 
 tiled.extendMenu("LayerView.Layers", [
     { action: "IslandShores", before: "LayerProperties" },
