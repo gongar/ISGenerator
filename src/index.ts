@@ -1,6 +1,6 @@
 import { getIslandShores } from "./island"
 
-const action = tiled.registerAction("IslandShores", function() {
+const action = tiled.registerAction("ISGeneratorCreate", function() {
     if (!tiled.activeAsset || !tiled.activeAsset.isTileMap) {
         return;
     }
@@ -40,6 +40,6 @@ action.text = "Create Island Shores"
 action.iconVisibleInMenu = false
 
 tiled.extendMenu("LayerView.Layers", [
-    { action: "IslandShores", before: "LayerProperties" },
+    { action: "ISGeneratorCreate", before: "LayerProperties" },
     { separator: true }
 ]);

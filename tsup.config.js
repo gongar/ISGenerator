@@ -12,7 +12,7 @@ module.exports = defineConfig({
         }
     },
     esbuildOptions: (option) => {
-        option.entryNames = "[dir]/IslandShores"
+        option.entryNames = "[dir]/ISGenerator"
     },
     outDir: path.resolve(__dirname, "dist")
 })

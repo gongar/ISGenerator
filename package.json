@@ -1,7 +1,7 @@
 {
-  "name": "island-shores",
+  "name": "isgenerator",
   "version": "1.0.0",
-  "main": "IslandShores.js",
+  "main": "ISGenerator.js",
   "scripts": {
     "build": "tsup",
     "test": "jest"
